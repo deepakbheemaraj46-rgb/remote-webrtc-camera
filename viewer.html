@@ -1,0 +1,11 @@
+<!doctype html><meta name=viewport content="width=device-width,initial-scale=1"><title>Live Viewer</title>
+<style>body{font-family:Arial;background:#111;color:#fff;text-align:center;padding:20px}video{width:100%;max-width:700px;background:#000;border-radius:12px}</style>
+<h2>👁 Live Viewer</h2><p>Room: demo</p><video id=video autoplay playsinline controls></video><p id=status>Connecting...</p>
+<script>const room=new URLSearchParams(location.search).get('room')||'demo';
+const ws=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host);
+let pc,stream;
+const cfg={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
+function send(x){if(ws.readyState===1)ws.send(JSON.stringify({...x,room}))}
+function makePC(){pc=new RTCPeerConnection(cfg);pc.onicecandidate=e=>e.candidate&&send({type:'ice',candidate:e.candidate});}
+ws.onopen=()=>send({type:'join'});
+makePC();pc.ontrack=e=>{video.srcObject=e.streams[0];status.textContent='LIVE'};ws.onmessage=async e=>{let m=JSON.parse(e.data);if(m.type==='joined'&&m.peers>0){let o=await pc.createOffer();await pc.setLocalDescription(o);send({type:'offer',offer:o})}else if(m.type==='answer'){await pc.setRemoteDescription(m.answer)}else if(m.type==='ice'){try{await pc.addIceCandidate(m.candidate)}catch{}}else if(m.type==='peer-left'){status.textContent='Camera disconnected';video.srcObject=null}};</script>
