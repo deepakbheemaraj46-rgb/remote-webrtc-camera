@@ -1,6 +1,9 @@
 const express=require('express'),http=require('http'),WebSocket=require('ws'),path=require('path');
 const app=express(),server=http.createServer(app),wss=new WebSocket.Server({server});
 app.use(express.static(path.join(__dirname,'public')));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "camera.html"));
+});
 app.get('/health',(q,r)=>r.json({ok:true}));
 const rooms=new Map();
 wss.on('connection',ws=>{
